@@ -147,27 +147,31 @@ class CommunityBot(discord.Client):
             release_message(release, self.config.channels["how-to"])
         self.command_release = releases[0] if releases else None
         for release in reversed(releases):
-            embed, view = release_message(release, self.config.channels["how-to"])
-            for target in ("releases", "beta") if release["prerelease"] else ("releases",):
-                key = f"release:{target}:{release['version']}"
-                if await asyncio.to_thread(self.state.get, key):
-                    continue
-                embed.set_footer(text=f"MithrilPF: {key}")
-                content = f"<@&{self.config.beta_role}>" if target == "beta" else None
-                mentions = discord.AllowedMentions(
-                    roles=[discord.Object(id=self.config.beta_role)],
-                    everyone=False,
-                    users=False,
-                    replied_user=False,
-                )
-                await self.saved_message(
-                    key,
-                    await self.channel(target),
-                    embed=embed,
-                    view=view,
-                    content=content,
-                    mentions=mentions,
-                )
+            targets = ("releases", "beta") if release["prerelease"] else ("releases",)
+            for target in targets:
+                await self.publish_release(release, target)
+
+    async def publish_release(self, release, target):
+        embed, view = release_message(release, self.config.channels["how-to"])
+        key = f"release:{target}:{release['version']}"
+        if await asyncio.to_thread(self.state.get, key):
+            return
+        embed.set_footer(text=f"MithrilPF: {key}")
+        content = f"<@&{self.config.beta_role}>" if target == "beta" else None
+        mentions = discord.AllowedMentions(
+            roles=[discord.Object(id=self.config.beta_role)],
+            everyone=False,
+            users=False,
+            replied_user=False,
+        )
+        await self.saved_message(
+            key,
+            await self.channel(target),
+            embed=embed,
+            view=view,
+            content=content,
+            mentions=mentions,
+        )
 
     async def poll(self):
         await self.wait_until_ready()

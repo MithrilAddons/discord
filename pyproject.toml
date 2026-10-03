@@ -22,7 +22,7 @@ addopts = "-ra"
 [tool.coverage.run]
 branch = true
 relative_files = true
-source = ["src/mithril_discord", "tools"]
+source = ["src", "tools"]
 
 [tool.ruff]
 target-version = "py312"

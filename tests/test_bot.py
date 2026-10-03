@@ -73,7 +73,8 @@ def test_filter_deletes_logs_no_content_and_private_notice(bot):
     msg.delete.assert_awaited_once()
     msg.author.send.assert_awaited_once()
     log = audit.send.call_args.kwargs["embed"].description
-    assert "SECRET-CONTENT" not in log and "private.jar" not in log
+    assert "SECRET-CONTENT" not in log
+    assert "private.jar" not in log
     assert "executable_attachment" in log
 
 
@@ -221,8 +222,9 @@ def test_channel_must_belong_to_selected_guild(bot):
     bot.fetch_channel = AsyncMock(return_value=target)
     assert run(bot.channel("status")) is target
     target.guild.id = 999
+    request = bot.channel("status")
     with pytest.raises(ValueError):
-        run(bot.channel("status"))
+        run(request)
 
 
 def test_connection_hooks_and_sanitized_errors(bot, capsys):
