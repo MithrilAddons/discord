@@ -1,0 +1,32 @@
+[project]
+name = "mithril-discord"
+version = "0.1.0.dev0"
+description = "MithrilPF Discord community bot"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12,<3.15"
+dependencies = ["discord.py==2.7.1"]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "pytest-cov==7.1.0", "ruff==0.16.9"]
+
+[tool.uv]
+package = false
+required-version = "==0.12.19"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+source = ["src/mithril_discord", "tools"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
