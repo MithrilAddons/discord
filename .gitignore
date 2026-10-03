@@ -1,0 +1,15 @@
+.venv/
+.tools/
+.local/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage*
+build/
+*.env
+.env*
+*.sqlite3*
+*.log
+AGENTS.md
+docs/LOCAL_WORKSPACE.md
