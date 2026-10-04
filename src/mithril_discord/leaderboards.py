@@ -36,6 +36,11 @@ def validate(rows):
             raise ValueError("Invalid leaderboard identity")
         seen.add(uuid)
         validate_name(row["name"])
+        map_id = row.get("map_id")
+        if map_id is not None and (
+            not isinstance(map_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", map_id)
+        ):
+            raise ValueError("Invalid map reference")
         for key, maximum in (("rank", 10), ("real_ms", 7200000), ("ticks", 144000)):
             if type(row[key]) is not int or not 1 <= row[key] <= maximum:
                 raise ValueError("Invalid leaderboard timing")
@@ -65,6 +70,8 @@ def category_lines(rows, terminal):
         tied = list(entries)
         first = tied[0]
         timing = duration(first["real_ms"] if terminal else first["ticks"] * 50)
+        if not terminal and first.get("map_id"):
+            timing = f"[{timing}](https://mithril.foo/runs/{first['map_id']})"
         prefix = f"**{rank}. {timing}** — "
         line = prefix
         for row in tied:

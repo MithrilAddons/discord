@@ -1,5 +1,11 @@
 # Discord foundation contract v1
 
+Solo leaderboard rows may include `map_id`, a 43-character base64url record ID.
+The bot links the time to `https://mithril.foo/runs/{map_id}`. The backend supplies
+this field only for retained current-best maps; older records remain plain times.
+Terminal rows remain unchanged. The bot constructs the URL from the validated ID
+and never accepts a destination URL from a record.
+
 `discord-foundation-v1.json` contains synthetic examples shared byte-for-byte with
 the matching web change. Both repositories test the payloads. Compare fixture hashes
 before publishing/deploying coordinated changes; a copied fixture is not automatic

@@ -40,6 +40,18 @@ def test_each_separate_pb_occupies_one_line():
     ]
 
 
+def test_solo_time_links_to_its_map_and_terminals_stay_plain():
+    data = fixture()
+    record_id = "a" * 43
+    data["boards"]["f7_solo"][0]["map_id"] = record_id
+    data["boards"]["m7_terminals"][0]["map_id"] = record_id
+    embeds = cards(data)
+    assert embeds[0].description == (
+        f"**1. [1:30.000](https://mithril.foo/runs/{record_id})** — SyntheticOne"
+    )
+    assert "https://" not in embeds[2].description
+
+
 def test_empty_unknown_name_and_large_tie_group_fit_discord_limits():
     data = fixture()
     data["boards"]["f7_solo"] = []
@@ -66,6 +78,10 @@ def test_empty_unknown_name_and_large_tie_group_fit_discord_limits():
         ("ticks", 0),
         ("rank", 11),
         ("real_ms", -1),
+        ("map_id", "https://example.invalid"),
+        ("map_id", "a" * 42),
+        ("map_id", "a" * 44),
+        ("map_id", 42),
     ],
 )
 def test_bad_records_rejected(field, value):
