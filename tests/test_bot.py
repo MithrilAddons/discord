@@ -194,6 +194,7 @@ def test_releases_once_per_channel_and_opted_beta_role_only(bot, monkeypatch):
     assert beta["content"] == "<@&3>"
     assert not beta["allowed_mentions"].everyone
     assert len(beta["allowed_mentions"].roles) == 1
+    assert len(beta["embeds"]) == 1
     assert bot.command_release == value
 
 
@@ -209,7 +210,10 @@ def test_cached_commands_are_ephemeral(bot):
         await commands["release"].callback(interaction)
         assert all(c.kwargs["ephemeral"] for c in interaction.response.send_message.call_args_list)
         assert all(
-            isinstance(c.kwargs["embed"], discord.Embed)
+            all(
+                isinstance(e, discord.Embed)
+                for e in c.kwargs.get("embeds", [c.kwargs.get("embed")])
+            )
             for c in interaction.response.send_message.call_args_list
         )
 
@@ -238,3 +242,18 @@ def test_connection_hooks_and_sanitized_errors(bot, capsys):
 
     run(check())
     assert "sensitive-content" not in capsys.readouterr().out
+
+
+def test_release_posts_include_separate_metrics_without_extra_messages(bot):
+    from test_messages import checks, release
+
+    value = {**release(), "checks": checks()}
+    target = channel()
+    bot.channel = AsyncMock(return_value=target)
+    run(bot.publish_release(value, "releases"))
+    run(bot.publish_release(value, "releases"))
+    target.send.assert_awaited_once()
+    embeds = target.send.call_args.kwargs["embeds"]
+    assert len(embeds) == 2
+    assert embeds[1].title == "Automated checks"
+    assert embeds[0].footer.text == "MithrilPF: release:releases:1.2.3"

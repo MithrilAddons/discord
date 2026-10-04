@@ -1,5 +1,6 @@
-"""Fixed templates and official links; arbitrary release-note links are plain text."""
+"""Fixed templates and official download buttons with Markdown release notes."""
 
+import math
 import re
 
 import discord
@@ -156,12 +157,10 @@ def release_message(release, how_to: int):
         raise ValueError("Invalid release destination")
     if type(release["prerelease"]) is not bool or release["prerelease"] != ("-" in version):
         raise ValueError("Invalid prerelease marker")
-    # Plain notes inside a code block cannot supply disguised download buttons.
-    notes = str(release["notes"]).replace("`", "'")[:2600]
-    notes = discord.utils.escape_mentions(notes)
+    notes = discord.utils.escape_mentions(str(release["notes"])[:2600])
     channel = "Prerelease" if release["prerelease"] else "Stable"
     embed = info_embed(title=f"MithrilPF {version} ({channel})", url=expected)
-    embed.description = f"```\n{notes}\n```" if notes else "See the release notes on GitHub."
+    embed.description = notes or "See the release notes on GitHub."
     embed.add_field(name="SHA-256", value=f"```\n{checksum}\n```", inline=False)
     embed.add_field(
         name="Verify your download",
@@ -172,6 +171,35 @@ def release_message(release, how_to: int):
     view.add_item(discord.ui.Button(label="GitHub download", url=release["url"]))
     view.add_item(discord.ui.Button(label="Modrinth", url="https://modrinth.com/mod/mithrilpf"))
     return embed, view
+
+
+def release_metrics(release):
+    metrics = release.get("checks")
+    if metrics is None:
+        return []
+    tests = metrics["tests"]
+    url = metrics["run_url"]
+    if (
+        type(tests) is not int
+        or not 0 < tests <= 1_000_000
+        or not re.fullmatch(
+            r"https://github\.com/MithrilAddons/mithrilpf/actions/runs/[1-9][0-9]{0,14}", url
+        )
+    ):
+        raise ValueError("Invalid release check metadata")
+    for key in ("line_coverage", "branch_coverage"):
+        value = metrics[key]
+        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 100:
+            raise ValueError("Invalid coverage percentage")
+    embed = info_embed("Automated checks", "Release builds passed on Linux and Windows.", url=url)
+    embed.add_field(name="JVM tests", value=f"{tests:,} passed", inline=True)
+    embed.add_field(name="Line coverage", value=f"{metrics['line_coverage']:.1f}%", inline=True)
+    embed.add_field(name="Branch coverage", value=f"{metrics['branch_coverage']:.1f}%", inline=True)
+    embed.add_field(name="Report", value=f"[View release workflow]({url})", inline=False)
+    embed.set_footer(
+        text="MithrilPF • JVM test counts and JaCoCo coverage from the Linux release build"
+    )
+    return [embed]
 
 
 def status_message(summary, last_success):

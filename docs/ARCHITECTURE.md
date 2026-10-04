@@ -27,8 +27,9 @@ Status is edited every 60 seconds. Three consecutive failed backend checks creat
 one persistent incident post, subsequently edited through failure and recovery.
 Release metadata is polled every five minutes. The latest ten supported releases
 are considered; each is posted once per destination, with prereleases also in beta.
-Only the configured Beta tester role can be mentioned by a release post. Plain
-code-block notes cannot create disguised Markdown download buttons.
+Only the configured Beta tester role can be mentioned by a release post. Release
+notes preserve Markdown from the project's published GitHub release, with mentions
+escaped. Download buttons continue to use validated official destinations.
 
 SQLite stores only operational message IDs keyed by purpose/version. After a crash
 between sending and saving, the bot searches the latest 100 channel messages for
@@ -61,3 +62,12 @@ Later phases, in order:
 Backend-only personal data and atomic erasure must be established before adding
 identity links. The later event feed, voice state, schemas and moderation mutations
 are deliberately not stubbed into the Phase 1 contract.
+
+Release announcements use a reviewed, versioned notes file from the mod repository.
+When the release workflow supplies JAR-bound test metadata, the backend removes its
+hidden comment and supplies a separate checks object. The bot renders a second native
+Discord embed with JVM test count, JaCoCo line/branch coverage and a workflow link.
+Counts and coverage are from the Linux release build; the workflow also requires
+Windows checks. These are automated checks, not a gameplay certification. Older
+releases without metrics retain their single announcement embed. No extra GitHub
+requests or bot credentials are required.
