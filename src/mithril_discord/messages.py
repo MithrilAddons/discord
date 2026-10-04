@@ -183,7 +183,9 @@ def release_metrics(release):
         type(tests) is not int
         or not 0 < tests <= 1_000_000
         or not re.fullmatch(
-            r"https://github\.com/MithrilAddons/mithrilpf/actions/runs/[1-9][0-9]{0,14}", url
+            r"https://github\.com/MithrilAddons/mithrilpf/actions/runs/[1-9]\d{0,14}",
+            url,
+            flags=re.ASCII,
         )
     ):
         raise ValueError("Invalid release check metadata")

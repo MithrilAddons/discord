@@ -156,5 +156,6 @@ def test_native_release_embeds_fit_discord_limits_together():
 def test_metrics_reject_invalid_numbers_and_external_links(key, value):
     metrics = checks()
     metrics[key] = value
+    payload = {**release(), "checks": metrics}
     with pytest.raises(ValueError):
-        release_metrics({**release(), "checks": metrics})
+        release_metrics(payload)
