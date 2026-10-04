@@ -16,16 +16,28 @@ def fixture():
     )
 
 
-def test_cards_show_distinct_clocks_and_group_tied_players():
+def test_cards_use_ranked_clock_and_compact_tied_player_lines():
     embeds = cards(fixture())
     assert len(embeds) == 3
-    assert "1:30.000 tick time" in embeds[0].description
+    assert embeds[0].description == "**1. 1:30.000** — SyntheticOne"
     terminal = embeds[2].description
     assert terminal.count("**1.") == 1
-    assert "SyntheticOne" in terminal
-    assert "SyntheticTwo" in terminal
-    assert "1:40.000 real · 1:30.000 tick time" in terminal
+    assert terminal == "**1. 1:40.000** — SyntheticOne, SyntheticTwo"
+    assert all("tick time" not in e.description for e in embeds)
+    assert all("real" not in e.description for e in embeds)
     assert duration(60005) == "1:00.005"
+
+
+def test_each_separate_pb_occupies_one_line():
+    data = fixture()
+    first = data["boards"]["f7_solo"][0]
+    data["boards"]["f7_solo"].append(
+        dict(first, rank=2, uuid="2" * 32, name="SyntheticTwo", ticks=1820)
+    )
+    assert cards(data)[0].description.splitlines() == [
+        "**1. 1:30.000** — SyntheticOne",
+        "**2. 1:31.000** — SyntheticTwo",
+    ]
 
 
 def test_empty_unknown_name_and_large_tie_group_fit_discord_limits():
@@ -37,6 +49,7 @@ def test_empty_unknown_name_and_large_tie_group_fit_discord_limits():
     assert "No eligible times" in embeds[0].description
     assert len(embeds) > 3
     assert all(len(embed.description) <= 4096 and len(embed) <= 6000 for embed in embeds)
+    assert all(e.description.startswith("**1. 1:40.000** — ") for e in embeds[2:])
     combined = "\n".join(e.description for e in embeds)
     for n in range(400):
         assert f"{n:032x}" in combined

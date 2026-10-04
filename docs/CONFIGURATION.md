@@ -43,6 +43,10 @@ cards for F7 solo clear, M7 solo clear and M7 terminals. Solo clears use tick ti
 contributes their best eligible observation. Exact terminal ties share one slot,
 including every tied player in the tenth slot; extra cards accommodate large ties.
 Solo ties use UUID order for stable placement. Only M7 terminal records appear.
+Put timing rules in the channel topic: solo clears use tick time; M7 terminals use
+real time with tick time as the tiebreaker. Cards show one compact rank/time/name
+line per PB, with comma-separated tied players that wrap naturally. Exceptionally
+large tie groups continue with the same rank on additional cards.
 
 The backend owns ranking, moderation and deletion. Names are last authenticated
 Minecraft names; a record without a known name displays its UUID until its owner

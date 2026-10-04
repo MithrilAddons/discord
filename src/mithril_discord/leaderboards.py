@@ -50,12 +50,7 @@ def cards(payload):
         rows = payload["boards"][key]
         validate(rows)
         terminal = key == "m7_terminals"
-        rule = (
-            "Top 10 time slots · Real time, then tick time · One PB per player"
-            if terminal
-            else "Top 10 players · Tick time · Solo 300 score · One PB per player"
-        )
-        pages = paginate(category_lines(rows, terminal, rule), rule, title)
+        pages = paginate(category_lines(rows, terminal))
         for number, description in enumerate(pages, 1):
             suffix = f" ({number}/{len(pages)})" if len(pages) > 1 else ""
             embed = info_embed(title + suffix, description.rstrip())
@@ -64,30 +59,31 @@ def cards(payload):
     return embeds
 
 
-def category_lines(rows, terminal, rule):
-    lines = [rule, ""]
+def category_lines(rows, terminal):
+    lines = []
     for rank, entries in groupby(rows, key=lambda row: row["rank"]):
         tied = list(entries)
         first = tied[0]
-        timing = f"{duration(first['ticks'] * 50)} tick time"
-        if terminal:
-            timing = f"{duration(first['real_ms'])} real · {timing}"
-        lines.append(f"**{rank}. {timing}**")
-        lines.extend(plain(row["name"] or row["uuid"]) for row in tied)
-        lines.append("")
+        timing = duration(first["real_ms"] if terminal else first["ticks"] * 50)
+        prefix = f"**{rank}. {timing}** — "
+        line = prefix
+        for row in tied:
+            name = plain(row["name"] or row["uuid"])
+            if len(line) + len(name) + 2 > 3500:
+                lines.append(line)
+                line = prefix
+            line += (", " if line != prefix else "") + name
+        lines.append(line)
     if not rows:
         lines.append("No eligible times yet. Record a qualifying run with MithrilPF linked.")
     return lines
 
 
-def paginate(lines, rule, title):
+def paginate(lines):
     # A group remains one rank even when its names need a continuation card.
     pages = [""]
-    heading = ""
     for line in lines:
-        if len(pages[-1]) + len(line) + 1 > 3500:
-            pages.append(f"{rule}\n\n{title} — continued\n{heading}\n")
-        if line.startswith("**"):
-            heading = line
+        if pages[-1] and len(pages[-1]) + len(line) + 1 > 3500:
+            pages.append("")
         pages[-1] += line + "\n"
     return pages
