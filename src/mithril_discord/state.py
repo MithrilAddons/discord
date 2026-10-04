@@ -35,3 +35,11 @@ class State:
     def remove(self, key):
         with self.connect() as db:
             db.execute("DELETE FROM messages WHERE key = ?", (key,))
+
+    def keys(self, prefix):
+        with self.connect() as db:
+            return [
+                row[0]
+                for row in db.execute("SELECT key FROM messages")
+                if row[0].startswith(prefix)
+            ]

@@ -11,6 +11,7 @@ from discord import app_commands
 
 from . import backend
 from .config import read_secret
+from .leaderboards import cards
 from .messages import WARNING, info_embed, release_message, status_message, support_reply
 from .safety import assess
 from .state import State
@@ -178,6 +179,10 @@ class CommunityBot(discord.Client):
         turns = 0
         while not self.is_closed():
             try:
+                await self.leaderboards()
+            except (OSError, ValueError, KeyError, TypeError, discord.HTTPException):
+                print("Discord leaderboard publication failed; retrying.", flush=True)
+            try:
                 await self.tick()
                 if turns % 5 == 0:
                     await self.releases()
@@ -195,6 +200,36 @@ class CommunityBot(discord.Client):
                 )
             turns += 1
             await asyncio.sleep(60)
+
+    async def leaderboards(self):
+        if "leaderboards" not in self.config.channels:
+            return
+        channel = await self.channel("leaderboards")
+        try:
+            payload = await asyncio.to_thread(backend.fetch, "leaderboards", self.secret)
+            embeds = cards(payload)
+        except (OSError, ValueError, KeyError, TypeError, OverflowError, http.client.HTTPException):
+            # Replace stale rankings: deleted or moderated records must not remain
+            # presented as current when the authoritative service is unavailable.
+            embeds = [
+                info_embed(
+                    "Leaderboards unavailable",
+                    "Rankings could not be refreshed. Retrying every minute.",
+                )
+            ]
+        prefix = f"leaderboards:{channel.id}:"
+        active = set()
+        for index, embed in enumerate(embeds):
+            key = f"{prefix}{index}"
+            active.add(key)
+            embed.set_footer(text=f"MithrilPF: {key}")
+            await self.saved_message(key, channel, embed=embed)
+        for key in await asyncio.to_thread(self.state.keys, prefix):
+            if key not in active:
+                message_id = await asyncio.to_thread(self.state.get, key)
+                with contextlib.suppress(discord.NotFound):
+                    await (await channel.fetch_message(message_id)).delete()
+                await asyncio.to_thread(self.state.remove, key)
 
     async def on_message(self, message):
         if (

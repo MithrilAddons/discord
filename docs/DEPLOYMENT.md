@@ -1,6 +1,12 @@
 # Deployment and recovery
 
 Deploy the tested backend extension first, then the independently tested bot.
+
+For leaderboards, deploy the matching backend first and configure the private
+`channels.leaderboards` ID. Keep channel creation as an operator setup action,
+outside published runtime code. Verify the three cards, a new mod PB, terminal
+ties, moderation/erasure, unavailable/recovery behavior and restart without
+duplicates. Offline tests do not establish actual Minecraft capture or Discord rendering.
 Backend publication must satisfy the web repository's source-availability workflow.
 Do not place the bot inside the web process, reuse its service account, or expose
 port 8781 through nginx. No CI workflow deploys.
