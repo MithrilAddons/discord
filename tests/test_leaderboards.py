@@ -22,7 +22,8 @@ def test_cards_show_distinct_clocks_and_group_tied_players():
     assert "1:30.000 tick time" in embeds[0].description
     terminal = embeds[2].description
     assert terminal.count("**1.") == 1
-    assert "SyntheticOne" in terminal and "SyntheticTwo" in terminal
+    assert "SyntheticOne" in terminal
+    assert "SyntheticTwo" in terminal
     assert "1:40.000 real · 1:30.000 tick time" in terminal
     assert duration(60005) == "1:00.005"
 
@@ -46,6 +47,8 @@ def test_empty_unknown_name_and_large_tie_group_fit_discord_limits():
     [
         ("uuid", "bad"),
         ("name", "@everyone"),
+        ("name", "Synthetíc"),
+        ("name", 42),
         ("ticks", True),
         ("ticks", 0),
         ("rank", 11),

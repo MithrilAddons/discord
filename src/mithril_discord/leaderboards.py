@@ -19,6 +19,13 @@ def duration(milliseconds):
     return f"{minutes}:{seconds:02}.{millis:03}"
 
 
+def validate_name(name):
+    if name is not None and (
+        not isinstance(name, str) or not re.fullmatch(r"\w{1,16}", name, flags=re.ASCII)
+    ):
+        raise ValueError("Invalid Minecraft name")
+
+
 def validate(rows):
     if not isinstance(rows, list) or len(rows) > 1000:
         raise ValueError("Invalid leaderboard size")
@@ -28,10 +35,7 @@ def validate(rows):
         if not isinstance(uuid, str) or not re.fullmatch(r"[0-9a-f]{32}", uuid) or uuid in seen:
             raise ValueError("Invalid leaderboard identity")
         seen.add(uuid)
-        if row["name"] is not None and (
-            not isinstance(row["name"], str) or not re.fullmatch(r"[A-Za-z0-9_]{1,16}", row["name"])
-        ):
-            raise ValueError("Invalid Minecraft name")
+        validate_name(row["name"])
         for key, maximum in (("rank", 10), ("real_ms", 7200000), ("ticks", 144000)):
             if type(row[key]) is not int or not 1 <= row[key] <= maximum:
                 raise ValueError("Invalid leaderboard timing")
