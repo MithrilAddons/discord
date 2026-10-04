@@ -26,6 +26,13 @@ def validate_name(name):
         raise ValueError("Invalid Minecraft name")
 
 
+def validate_map_id(map_id):
+    if map_id is not None and (
+        not isinstance(map_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", map_id)
+    ):
+        raise ValueError("Invalid map reference")
+
+
 def validate(rows):
     if not isinstance(rows, list) or len(rows) > 1000:
         raise ValueError("Invalid leaderboard size")
@@ -36,11 +43,7 @@ def validate(rows):
             raise ValueError("Invalid leaderboard identity")
         seen.add(uuid)
         validate_name(row["name"])
-        map_id = row.get("map_id")
-        if map_id is not None and (
-            not isinstance(map_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", map_id)
-        ):
-            raise ValueError("Invalid map reference")
+        validate_map_id(row.get("map_id"))
         for key, maximum in (("rank", 10), ("real_ms", 7200000), ("ticks", 144000)):
             if type(row[key]) is not int or not 1 <= row[key] <= maximum:
                 raise ValueError("Invalid leaderboard timing")
@@ -64,14 +67,19 @@ def cards(payload):
     return embeds
 
 
+def displayed_time(row, terminal):
+    timing = duration(row["real_ms"] if terminal else row["ticks"] * 50)
+    if not terminal and row.get("map_id"):
+        return f"[{timing}](https://mithril.foo/runs/{row['map_id']})"
+    return timing
+
+
 def category_lines(rows, terminal):
     lines = []
     for rank, entries in groupby(rows, key=lambda row: row["rank"]):
         tied = list(entries)
         first = tied[0]
-        timing = duration(first["real_ms"] if terminal else first["ticks"] * 50)
-        if not terminal and first.get("map_id"):
-            timing = f"[{timing}](https://mithril.foo/runs/{first['map_id']})"
+        timing = displayed_time(first, terminal)
         prefix = f"**{rank}. {timing}** — "
         line = prefix
         for row in tied:
