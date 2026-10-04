@@ -10,8 +10,9 @@ desktop Rich Presence remain in the mod. Discord is never required to use the fi
 
 The first implementation includes executable/upload and suspicious-download filtering,
 support forum guidance, `/status`, `/release`,
-release announcements and a persistent status post. It requires the matching backend
-extension before release/status features can run. It has not yet been deployed.
+release announcements, a persistent status post and optional updating top-ten
+leaderboards for F7/M7 solo clears and M7 terminals. It requires the matching backend
+extension before release/status/leaderboard features can run.
 
 Verification, stat roles, DM subscriptions, party voice and moderation-case forwarding
 are later phases. Party voice must remain available throughout dungeon runs;

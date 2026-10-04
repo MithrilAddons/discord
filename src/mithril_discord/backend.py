@@ -7,7 +7,7 @@ MAX_RESPONSE = 131072
 
 
 def fetch(endpoint: str, secret: str):
-    if endpoint not in ("summary", "releases"):
+    if endpoint not in ("summary", "releases", "leaderboards"):
         raise ValueError("Unknown backend endpoint")
     connection = http.client.HTTPConnection("127.0.0.1", 8781, timeout=5)
     try:
@@ -22,8 +22,9 @@ def fetch(endpoint: str, secret: str):
             or response.getheader("Content-Encoding", "identity") != "identity"
         ):
             raise ValueError("Backend unavailable")
-        data = response.read(MAX_RESPONSE + 1)
-        if len(data) > MAX_RESPONSE:
+        limit = 524288 if endpoint == "leaderboards" else MAX_RESPONSE
+        data = response.read(limit + 1)
+        if len(data) > limit:
             raise ValueError("Backend response too large")
         result = json.loads(data)
         if not isinstance(result, dict) or result.get("version") != 1:

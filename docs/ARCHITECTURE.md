@@ -5,6 +5,14 @@ fixed `127.0.0.1:8781/internal/v1` endpoints, with a separate shared secret. It
 never imports backend code, reads backend databases or holds the Hypixel key.
 GitHub release polling is performed by the backend's existing ReleaseCache.
 
+The optional leaderboard channel reads `/internal/v1/leaderboards`. Existing mod
+submission/authentication and server record eligibility remain unchanged. The API
+returns complete top-ten rankings (up to 1,000 tied players per category), with
+both clocks from the same observation. Exceeding that bound fails explicitly;
+it never silently drops tied players. The bot permits a bounded 512 KiB response,
+uses one embed per message and splits long lists below Discord's embed limits.
+Polling and database work run outside the gateway/event-loop callbacks.
+
 Phase 1 implements community-message safety,
 support forum guidance, release posts and status. The original design's claim
 that this phase requires no backend work does not hold for the existing API:

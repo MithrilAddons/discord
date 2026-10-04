@@ -19,7 +19,8 @@ paths in a private JSON file, outside the repository. This example uses placehol
     "status": 303,
     "support": 304,
     "beta": 305,
-    "audit-log": 306
+    "audit-log": 306,
+    "leaderboards": 307
   }
 }
 ```
@@ -34,6 +35,26 @@ Embed Links, Read Message History and Manage Messages. The runtime does not need
 Administrator or permission to create channels or manage roles. Keep Discord's
 Message Content Intent enabled for attachment/link filtering. Discord AutoMod is
 managed separately through server settings.
+
+`leaderboards` is optional. Configure a read-only text channel to enable the
+leaderboard publisher. The bot refreshes it every 60 seconds, editing persistent
+cards for F7 solo clear, M7 solo clear and M7 terminals. Solo clears use tick time
+(20 ticks per second); terminals use real milliseconds then ticks. Each player
+contributes their best eligible observation. Exact terminal ties share one slot,
+including every tied player in the tenth slot; extra cards accommodate large ties.
+Solo ties use UUID order for stable placement. Only M7 terminal records appear.
+Put timing rules in the channel topic: solo clears use tick time; M7 terminals use
+real time with tick time as the tiebreaker. Cards show one compact rank/time/name
+line per PB, with comma-separated tied players that wrap naturally. Exceptionally
+large tie groups continue with the same rank on additional cards.
+
+The backend owns ranking, moderation and deletion. Names are last authenticated
+Minecraft names; a record without a known name displays its UUID until its owner
+authenticates again. No Discord account link or membership is required to rank.
+The bot stores message IDs only, recreates deleted cards and removes surplus cards.
+If the backend fails, rankings are replaced with an unavailable notice until a
+successful refresh. Discord permission failures can prevent edits and removals;
+operators must restore access. Discord copies/screenshots cannot be recalled.
 
 The internal secret is a separate random 32-byte lowercase hex value shared with
 the backend listener. Never reuse the bot token as the internal secret. Relative
