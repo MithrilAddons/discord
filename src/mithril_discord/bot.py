@@ -12,7 +12,14 @@ from discord import app_commands
 from . import backend
 from .config import read_secret
 from .leaderboards import cards
-from .messages import WARNING, info_embed, release_message, status_message, support_reply
+from .messages import (
+    WARNING,
+    info_embed,
+    release_message,
+    release_metrics,
+    status_message,
+    support_reply,
+)
 from .safety import assess
 from .state import State
 
@@ -60,7 +67,9 @@ class CommunityBot(discord.Client):
                 )
                 return
             embed, view = release_message(self.command_release, config.channels["how-to"])
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+            await interaction.response.send_message(
+                embeds=[embed, *release_metrics(self.command_release)], view=view, ephemeral=True
+            )
 
     async def setup_hook(self):
         await self.tree.sync(guild=discord.Object(id=self.config.guild_id))
@@ -168,7 +177,7 @@ class CommunityBot(discord.Client):
         await self.saved_message(
             key,
             await self.channel(target),
-            embed=embed,
+            embeds=[embed, *release_metrics(release)],
             view=view,
             content=content,
             mentions=mentions,
